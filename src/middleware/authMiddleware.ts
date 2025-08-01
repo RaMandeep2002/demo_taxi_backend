@@ -16,7 +16,7 @@ export const authenticate = async (
   }
 
   try {
-    const secret = process.env.JWT_SECRET || "srtaxi";
+    const secret = process.env.JWT_SECRET || "demotaxi";
     const decoded = jwt.verify(token, secret) as UserPayload;
 
     if (decoded.role === "admin") {

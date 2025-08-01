@@ -139,7 +139,7 @@ export const loginuser = async (req: Request, res: Response) => {
       return;
     }
 
-    const secret = process.env.JWT_SECRET || "srtaxi";
+    const secret = process.env.JWT_SECRET || "demotaxi";
     // const token = jwt.sign({ id: user._id, role: user.role }, secret, {
     //   expiresIn: "1h",
     // });

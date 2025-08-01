@@ -6,7 +6,7 @@ dotenv.config();
 const mongoUri = process.env.MONGO_URI!;
 
 export const runDatabaseBackup = () => {
-    const dbname = "ride-booking";
+    const dbname = "demo_taxi_backend";
     const backupRootDir = path.join(__dirname, "../../backup");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const backupDir = path.join(backupRootDir, `backup-${timestamp}`);
