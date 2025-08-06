@@ -4,6 +4,8 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 export interface IDriver extends Document {
   driverId: string;
   drivername: string;
+
+  firstname: string;
   email: string;
   phoneNumber: string;
   driversLicenseNumber?: string;

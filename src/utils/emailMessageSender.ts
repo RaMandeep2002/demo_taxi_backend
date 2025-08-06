@@ -128,7 +128,7 @@ export const sendEmailMessageBeforeTime = async (date: string, time: string, cus
     }
 }
 
-export const sendBookingsDetailsReportEmail = async (toEmaail: string, filePath: string) => {
+export const sendBookingsDetailsReportEmail = async (toEmail: string, filePath: string, ccEmails?: string | string[]) => {
     try {
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -140,9 +140,9 @@ export const sendBookingsDetailsReportEmail = async (toEmaail: string, filePath:
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-        const mailOptions = {
+        const mailOptions: any = {
             from: `"Salmon Arm Taxi" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_USER,
+            to: [toEmail, process.env.EMAIL_USER],
             subject: "Monthly Booking Report",
             text: "Please find attached the booking report for this month.",
             attachments: [
@@ -153,6 +153,9 @@ export const sendBookingsDetailsReportEmail = async (toEmaail: string, filePath:
             ],
         };
 
+        if (ccEmails) {
+            mailOptions.bcc = ccEmails;
+        }
 
         await transporter.sendMail(mailOptions);
         console.log("📧 Email sent Successfully!");
