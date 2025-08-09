@@ -55,19 +55,19 @@ const generateRandomRegistrationNumber = () => {
 //   }
 // };
 
-export const getAllAdminInfo = async(req:Request, res:Response) =>{
+export const getAllAdminInfo = async (req: Request, res: Response) => {
   console.log("admin")
-  try{
-    const admin = await User.find({role: Roles.Admin});
+  try {
+    const admin = await User.find({ role: Roles.Admin });
     console.table(admin)
-    if(!admin){
-      res.status(404).json({message:"No admin information found!!"});
+    if (!admin) {
+      res.status(404).json({ message: "No admin information found!!" });
       return;
     }
-    res.status(200).json({message:"Admin info", data:admin});
-  }catch(error){
-    res.status(500).json({message:"Error for Fetching the Admin details!!", error});
-  }  
+    res.status(200).json({ message: "Admin info", data: admin });
+  } catch (error) {
+    res.status(500).json({ message: "Error for Fetching the Admin details!!", error });
+  }
 
 }
 
@@ -120,7 +120,7 @@ export const adddriver = async (req: Request, res: Response) => {
     return;
   }
 
-  const { drivername, email, driversLicenseNumber, phoneNumber, password } =
+  const { drivername, email, driversLicenseNumber, licenseState,licenseExpiryDate,licenseClass, phoneNumber, password } =
     validationResult.data;
 
   try {
@@ -140,6 +140,8 @@ export const adddriver = async (req: Request, res: Response) => {
     // console.log(id, password);
     const hashedpassword = await bcrypt.hash(password, 10);
 
+    // const drivername = `${firstname} ${lastname}`;
+
     const user = new User({
       name: drivername,
       email,
@@ -154,6 +156,9 @@ export const adddriver = async (req: Request, res: Response) => {
       drivername,
       email,
       driversLicenseNumber,
+      licenseState,
+      licenseExpiryDate,
+      licenseClass,
       phoneNumber,
       password: hashedpassword,
       vehicle: [], // Initialize with an empty array of vehicles
@@ -232,13 +237,16 @@ export const addMultipleDrivers = async (req: Request, res: Response) => {
       validationResults.map(async (result) => {
         if (!result.success) return null;
 
-        const { drivername, email, driversLicenseNumber, phoneNumber, password } = result.data;
+        const {drivername, email, driversLicenseNumber, licenseState,licenseExpiryDate,licenseClass, phoneNumber, password } =
+        result.data;
 
         // Check if email already exists
         const existingDriver = await Driver.findOne({ email });
         if (existingDriver) return null; // Skip if driver exists
 
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // const drivername = `${firstname} ${lastname}`;
 
         const user = new User({
           name: drivername,
@@ -253,6 +261,9 @@ export const addMultipleDrivers = async (req: Request, res: Response) => {
           drivername,
           email,
           driversLicenseNumber,
+          licenseState,
+          licenseExpiryDate,
+          licenseClass,
           phoneNumber,
           password: hashedPassword,
           vehicle: [],
@@ -322,7 +333,7 @@ export const addMultipleDrivers = async (req: Request, res: Response) => {
 //       .json({ success: false, message: "Error fetching drivers", error });
 //   }
 // };
-  export const getDriverDetails = async (req: Request, res: Response) => {
+export const getDriverDetails = async (req: Request, res: Response) => {
   try {
     await redisClinet.del("drivers:list");
     const cacheKey = "drivers:list";
@@ -826,6 +837,7 @@ export const updateVehicleInfomation = async (req: Request, res: Response) => {
     res.status(400).json({ errors: validationResult.error.errors });
     return;
   }
+  
 
   const { company, vehicleModel, year, vehicle_plate_number } = validationResult.data;
   try {
@@ -1078,7 +1090,7 @@ export const generateAndSendReport = async () => {
     console.log("From date ===> ", fromDate);
     console.log("To date ===> ", toDate);
 
-    const PDT =  'America/Vancouver';
+    const PDT = 'America/Vancouver';
 
     console.log('fromDate in IST:', formatInTimeZone(fromDate, PDT, 'yyyy-MM-dd HH:mm:ssXXX'));
     console.log('toDate in IST:', formatInTimeZone(toDate, PDT, 'yyyy-MM-dd HH:mm:ssXXX'));
@@ -1345,11 +1357,11 @@ export const getBookingdeteails = async (req: Request, res: Response) => {
     });
 
     if (!bookings || bookings.length === 0) {
-       res.status(404).json({ message: "No bookings found!" });
-       return;
+      res.status(404).json({ message: "No bookings found!" });
+      return;
     }
 
-     res.status(200).json({
+    res.status(200).json({
       message: "Bookings fetched successfully",
       bookings,
       total: bookings.length,
@@ -1357,8 +1369,8 @@ export const getBookingdeteails = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     console.error("Error fetching bookings: ", error);
-     res.status(500).json({ message: "Error fetching the bookings" });
-     return;
+    res.status(500).json({ message: "Error fetching the bookings" });
+    return;
   }
 };
 
@@ -1814,7 +1826,7 @@ export const stopshiftbyadmin = async (req: Request, res: Response) => {
 export const stopAllShift = async (req: Request, res: Response) => {
   try {
 
-    const {endTime, endDate} = req.body;
+    const { endTime, endDate } = req.body;
 
     console.log("EndTime --> ", endTime);
     console.log("endDate --> ", endDate);
@@ -1822,8 +1834,8 @@ export const stopAllShift = async (req: Request, res: Response) => {
     const activeShifts = await Shift.find({ isActive: true });
 
     if (!activeShifts.length) {
-       res.status(200).json({ message: "No active shifts to stop." });
-       return;
+      res.status(200).json({ message: "No active shifts to stop." });
+      return;
     }
 
     // const activeBooking = await BookingModels.find({status:{$in: "ongoing"}});

@@ -41,76 +41,76 @@ const router = express.Router();
 
 router.get("/allAdminInfo", getAllAdminInfo)
 
-router.get("/adminInfo", authenticate, authorize(["admin"]), getAdminInfo);
-router.post("/add-driver", authenticate, authorize(["admin"]), adddriver);
-router.post("/resetPassword", authenticate, authorize(["admin"]), resetPassword);
-router.post("/add-multi-driver", authenticate, authorize(["admin"]),addMultipleDrivers );
+router.get("/adminInfo", authenticate, authorize(["admin", "super-admin"]), getAdminInfo);
+router.post("/add-driver", authenticate, authorize(["admin", "super-admin"]), adddriver);
+router.post("/resetPassword", authenticate, authorize(["admin", "super-admin"]), resetPassword);
+router.post("/add-multi-driver", authenticate, authorize(["admin", "super-admin"]),addMultipleDrivers );
 router.get(
   "/driver-details",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   getDriverDetails,
 );
 router.put(
   "/update-driver/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   upadateDriver,
 );
 router.delete(
   "/delete-driver/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   deleteDriver,
 );
 router.put(
   "/disable-Driver/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   disableDriver,
 );
 router.put(
   "/activate-Driver/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   activateDriver,
 );
 router.put(
   "/stopshiftbyadmin/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   stopshiftbyadmin,
 );
 
 router.post(
   "/register-vehicle-with_params/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   registerVehiclewithparams,
 );
 router.post(
   "/register-vehicle",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   registerVehicle,
 );
 router.post(
   "/register-vehicle-shared",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   registerSharedVehicle,
 );
 router.get(
   "/getDriverWithVehicle/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   getDriverWithVehicle,
 );
 
 router.get(
   "/getDriverWithVehicleandshifts/:driverId",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   getDriverWithVehicleandshifts,
 );
 
@@ -118,14 +118,14 @@ router.get(
 router.put(
   "/update-vehicle/:registrationNumber",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   updateVehicleInfomation,
 );
 
 router.delete(
   "/remove-vehicle/:registrationNumber",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   removeVehicle,
 );
 
@@ -133,23 +133,23 @@ router.delete(
 router.delete(
   "/delete-all-bookings",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "super-admin"]),
   deleteBookingdata,
 );
-router.get("/getbooking",authenticate, authorize(["admin"]), getAllBookingRider);
-router.get("/getDriverListWithVehicle",authenticate, authorize(["admin"]), getDriverListWithVehicle);
-router.get("/getDriverWithVehicleexculudeDriver",authenticate, authorize(["admin"]), getDriverWithVehicleexculudeDriver);
+router.get("/getbooking",authenticate, authorize(["admin", "super-admin"]), getAllBookingRider);
+router.get("/getDriverListWithVehicle",authenticate, authorize(["admin", "super-admin"]), getDriverListWithVehicle);
+router.get("/getDriverWithVehicleexculudeDriver",authenticate, authorize(["admin", "super-admin"]), getDriverWithVehicleexculudeDriver);
 // router.get("/report-csv",authenticate, authorize(["admin"]), gettingReport);
 router.get("/report-csv", gettingReport);
 router.get("/monthly-report-csv", gettingReportAndSendEmail);
-router.get("/bookings", authenticate, authorize(["admin"]),getBookingdeteails);
+router.get("/bookings", authenticate, authorize(["admin", "super-admin"]),getBookingdeteails);
 
 
-router.post("/settings", authenticate, authorize(["admin"]), setting);
-router.put("/settings", authenticate, authorize(["admin"]), updateSettings);
+router.post("/settings", authenticate, authorize(["admin", "super-admin"]), setting);
+router.put("/settings", authenticate, authorize(["admin", "super-admin"]), updateSettings);
 router.get("/settings", getsetting);
 
-router.post("/scheduleRide", authenticate, authorize(["admin"]), scheduleRide);
+router.post("/scheduleRide", authenticate, authorize(["admin", "super-admin"]), scheduleRide);
 
 router.post("/stopAllShifts", stopAllShift);
 

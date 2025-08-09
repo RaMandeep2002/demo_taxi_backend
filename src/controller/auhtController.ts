@@ -167,6 +167,18 @@ export const loginadmin = async (req: Request, res: Response) => {
       return;
     }
 
+    // Check if user is admin or superadmin
+    if (user.role !== "admin" && user.role !== "super-admin") {
+      res.status(403).json({ message: "Access denied. Admin privileges required." });
+      return;
+    }
+
+    // Check if account is disabled
+    if (!user.status) {
+      res.status(403).json({ message: "Your account has been disabled." });
+      return;
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       res.status(400).json({ message: "Invalid credentials" });
@@ -174,12 +186,19 @@ export const loginadmin = async (req: Request, res: Response) => {
     }
 
     const secret = process.env.JWT_SECRET || "srtaxi";
-    // const token = jwt.sign({ id: user._id, role: user.role }, secret, {
-    //   expiresIn: "1h",
-    // });
     const token = jwt.sign({ id: user._id, role: user.role }, secret);
     console.log("token ----> ", token)
-    res.status(200).json({ message: "Login successful", token, role: user.role  });
+    res.status(200).json({ 
+      message: "Login successful", 
+      token, 
+      role: user.role,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error });
   }

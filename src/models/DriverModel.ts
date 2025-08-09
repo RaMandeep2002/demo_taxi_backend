@@ -3,12 +3,13 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 // Interface for Driver
 export interface IDriver extends Document {
   driverId: string;
-  drivername: string;
-
-  firstname: string;
+  drivername:string;
   email: string;
   phoneNumber: string;
   driversLicenseNumber?: string;
+  licenseState?: string;
+  licenseExpiryDate?: string;
+  licenseClass?: string;
   vehicle: Types.ObjectId[];
   isOnline: boolean;
   location: {
@@ -17,7 +18,7 @@ export interface IDriver extends Document {
   };
   status: "available" | "busy" | "not working";
   shifts: Types.ObjectId[];
-  isActive : boolean;
+  isActive: boolean;
 }
 
 // Driver Schema
@@ -28,15 +29,27 @@ const DriverSchema: Schema = new Schema(
       required: true,
       unique: true,
     },
-    drivername: {
+    drivername:{
+      type:String,
+      required:true,
+      unique:true
+    },
+    firstname: {
       type: String,
-      required: true,
+      required: true
+    },
+    lastname: {
+      type: String,
+      requried: true
     },
     email: {
       type: String,
       required: true,
       unique: true,
     },
+    licenseState: {type:String},
+    licenseExpiryDate: {type:String},
+    licenseClass: {type:String},
     phoneNumber: {
       type: String,
       required: true,
@@ -75,7 +88,7 @@ const DriverSchema: Schema = new Schema(
         ref: "Shift",
       },
     ],
-    isActive : {type:Boolean, default:true},
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

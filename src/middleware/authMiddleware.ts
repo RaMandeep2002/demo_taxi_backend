@@ -19,7 +19,7 @@ export const authenticate = async (
     const secret = process.env.JWT_SECRET || "demotaxi";
     const decoded = jwt.verify(token, secret) as UserPayload;
 
-    if (decoded.role === "admin") {
+    if (decoded.role === "admin" || decoded.role === "super-admin") {
       req.user = decoded;
 
       if (!req.user.id) {

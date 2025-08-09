@@ -17,6 +17,7 @@ import bookigRouter from "./routers/bookingRouter";
 import authRouter from "./routers/authRouter";
 import adminRouter from "./routers/adminRouter";
 import driverRoute from "./routers/driverRoute";
+import superadminRouter from "./routers/superadminRouter";
 
 const PORT = process.env.PORT;
 
@@ -55,6 +56,7 @@ app.use("/customer", bookigRouter);
 app.use("/api/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use("/api/driver", driverRoute);
+app.use("/superadmin", superadminRouter);
 
 
 
