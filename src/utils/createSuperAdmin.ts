@@ -18,6 +18,7 @@ const createSuperAdmin = async () => {
     const superAdminData = {
       name: "Super Administrator",
       email: "superadmin@demotaxi.com",
+      phone_number: "9876543210",
       password: "SuperAdmin@2024", // Change this to a secure password
       role: Roles.Super,
       status: true
