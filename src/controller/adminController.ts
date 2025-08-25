@@ -19,10 +19,11 @@ import { format } from "fast-csv";
 import { parse } from "date-fns";
 import cron from "node-cron";
 import { sendWhatsappMessage } from "../utils/whatsappMessageSender";
-import { sendBookingsDetailsReportEmail, sendEmailMessage, sendEmailMessageBeforeTime } from "../utils/emailMessageSender";
+import { sendBookingsDetailsReportEmail, sendEmailMessage, sendEmailMessageBeforeTime, sendEmailMessageBeforeTimeWithExtraParams, sendEmailMessagewithextraParams, sendEmailUpdateMessageOfScheduleRide } from "../utils/emailMessageSender";
 import path from "path";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { record } from "zod";
+import ScheduleRideModel from "../models/ScheduleRideModel";
 
 const adminWhatsAppNumber = process.env.ADMIN_WHATSAPP_NUMBER!;
 
@@ -96,7 +97,10 @@ export const getAdminInfo = async (
 
     // Fetch from MongoDB if not in cache
     const admin = await User.findOne({ _id: adminId }).select("-password");
-    if (!admin || admin.role !== "admin") {
+    if (
+      !admin ||
+      !["admin", "super-admin", "fleet-manager"].includes(admin.role)
+    ) {
       res.status(404).json({ message: "Admin not found" });
       return;
     }
@@ -120,7 +124,7 @@ export const adddriver = async (req: Request, res: Response) => {
     return;
   }
 
-  const { drivername, email, driversLicenseNumber, licenseState,licenseExpiryDate,licenseClass, phoneNumber, password } =
+  const { drivername, email, driversLicenseNumber, licenseState, licenseExpiryDate, licenseClass, phoneNumber, password } =
     validationResult.data;
 
   try {
@@ -237,8 +241,8 @@ export const addMultipleDrivers = async (req: Request, res: Response) => {
       validationResults.map(async (result) => {
         if (!result.success) return null;
 
-        const {drivername, email, driversLicenseNumber, licenseState,licenseExpiryDate,licenseClass, phoneNumber, password } =
-        result.data;
+        const { drivername, email, driversLicenseNumber, licenseState, licenseExpiryDate, licenseClass, phoneNumber, password } =
+          result.data;
 
         // Check if email already exists
         const existingDriver = await Driver.findOne({ email });
@@ -714,7 +718,13 @@ export const registerSharedVehicle = async (req: Request, res: Response) => {
     return;
   }
 
-  const { company, vehicleModel, year, vehicle_plate_number } = validationResult.data;
+  const { company, vehicleModel, year, vehicle_plate_number, vin_number,
+    color,
+    fuel_type,
+    transmission,
+    registration_State,
+    registration_Expiry_Date,
+    last_Inspection_Date } = validationResult.data;
 
   try {
     const { registrationNumber } = generateRandomRegistrationNumber();
@@ -725,6 +735,13 @@ export const registerSharedVehicle = async (req: Request, res: Response) => {
       vehicleModel,
       year,
       vehicle_plate_number,
+      vin_number,
+      color,
+      fuel_type,
+      transmission,
+      registration_State,
+      registration_Expiry_Date,
+      last_Inspection_Date,
       isShared: true,
     });
 
@@ -837,7 +854,7 @@ export const updateVehicleInfomation = async (req: Request, res: Response) => {
     res.status(400).json({ errors: validationResult.error.errors });
     return;
   }
-  
+
 
   const { company, vehicleModel, year, vehicle_plate_number } = validationResult.data;
   try {
@@ -1542,47 +1559,63 @@ export const getAllShifts12 = async (req: Request, res: Response) => {
 };
 
 export const scheduleRide = async (req: Request, res: Response) => {
-
-  // Destructure pickup and dropoff separately to avoid variable redeclaration
+  // Destructure all possible fields for a scheduled ride
   const {
     customerName,
     customer_phone_number,
+    customer_email,
+    number_of_passengers,
+    time,
+    date,
     pickupAddress,
     dropOffAddress,
-    time,
-    date
+    roundTrip,
+    returnDate,
+    returnTime,
   } = req.body;
 
-  // Validate required fields for pickup and dropoff
-  if (
-    !time ||
-    !date
-  ) {
-    res.status(400).json({ message: "Time, and Date are required!" });
+  console.log("req.body -------> ", req.body);
+
+  // Validate required fields
+  if (!time || !date) {
+    res.status(400).json({ message: "Time and Date are required!" });
     return;
   }
 
   try {
-
-    const scheduledRide = new ScheduleRide({
+    // Build the scheduled ride object, including optional round trip fields
+    const scheduledRideData: any = {
       customerName,
       customer_phone_number,
+      customer_email,
+      number_of_passengers,
       pickuptime: time,
       pickupDate: date,
       pickupAddress,
       dropOffAddress,
       status: "schedule",
-    });
+    };
 
+    console.log("scheduledRideData --------> ", scheduledRideData)
+
+    // Only add round trip fields if provided
+    if (typeof roundTrip === "boolean") {
+      scheduledRideData.roundTrip = roundTrip;
+    }
+    if (roundTrip && returnDate) {
+      scheduledRideData.returnDate = returnDate;
+    }
+    if (roundTrip && returnTime) {
+      scheduledRideData.returnTime = returnTime;
+    }
+
+    const scheduledRide = new ScheduleRide(scheduledRideData);
+    console.log("scheduledRide --------> ", scheduledRide);
     await scheduledRide.save();
 
-    console.log("Date --> ", date);
-    console.log("time ---> ", time);
+    // Parse the scheduled ride time for notification scheduling
     const dateTimeString = `${date} ${time}`;
-    console.log("dateTimeString ---> ", dateTimeString);
     const rideDateTime = parse(dateTimeString, "MM/dd/yyyy hh:mma", new Date());
-    console.log("ride date time ---> ", rideDateTime);
-
 
     if (isNaN(rideDateTime.getTime())) {
       console.error("Invalid ride date/time format.");
@@ -1590,36 +1623,79 @@ export const scheduleRide = async (req: Request, res: Response) => {
       return;
     }
 
-    // Convert the rideDateTime (assumed to be in local/server time) to PDT
-    const pdtTimeZone = 'America/Vancouver';
-    const rideDateTimeInPDT = toZonedTime(rideDateTime, pdtTimeZone);
+    // Use Asia/Kolkata as the time zone for scheduling
+    const timeZone = "Asia/Kolkata";
+    const rideDateTimeInTZ = toZonedTime(rideDateTime, timeZone);
 
-    // Subtract 10 minutes in PDT
-    const notifyTimeInPDT = new Date(rideDateTimeInPDT.getTime() - 10 * 60 * 1000);
+    // Subtract 10 minutes for the notification
+    const notifyTimeInTZ = new Date(rideDateTimeInTZ.getTime() - 10 * 60 * 1000);
 
-    // If you need to convert notifyTimeInPDT back to UTC for cron or storage:
-    // const notifyTime = zonedTimeToUtc(notifyTimeInPDT, pdtTimeZone);
+    // Schedule the notification email
+    const cronTime = getCronTime(notifyTimeInTZ);
 
-    // For cron, you likely want the PDT time:
-    const notifyTime = notifyTimeInPDT;
-    console.log("notifyTime ---> ", notifyTime);
+    console.log("cron time ---- >", cronTime)
 
-    const getcronTime = getCronTime(notifyTime);
-    console.log("getcronTime ---> ", getcronTime)
+    // Send immediate confirmation email
+    // If roundTrip, pass returnDate and returnTime as well
+    if (roundTrip) {
+      await sendEmailMessagewithextraParams(
+        date,
+        time,
+        customerName,
+        customer_phone_number,
+        pickupAddress,
+        dropOffAddress,
+        roundTrip,
+        returnDate,
+        returnTime,
+        customer_email,
+        number_of_passengers,
+      );
+    } else {
+      await sendEmailMessage(
+        date,
+        time,
+        customerName,
+        customer_phone_number,
+        pickupAddress,
+        dropOffAddress,
+        customer_email,
+        number_of_passengers,
+      );
+    }
 
-    await sendEmailMessage(date, time, customerName, customer_phone_number, pickupAddress, dropOffAddress);
-
-    cron.schedule(getCronTime(notifyTime), async () => {
-      console.log("enter is cron");
+    cron.schedule(cronTime, async () => {
       try {
-        // await sendWhatsappMessage(adminWhatsAppNumber, date, time, customerName, customer_phone_number, pickupAddress, dropOffAddress);
-        await sendEmailMessageBeforeTime(date, time, customerName, customer_phone_number, pickupAddress, dropOffAddress);
-        console.log("Message sent successfully!!");
+        if (roundTrip) {
+          await sendEmailMessageBeforeTimeWithExtraParams(
+            date,
+            time,
+            customerName,
+            customer_phone_number,
+            pickupAddress,
+            dropOffAddress,
+            returnDate,
+            returnTime,
+            customer_email,
+            number_of_passengers,
+          );
+        } else {
+          await sendEmailMessageBeforeTime(
+            date,
+            time,
+            customerName,
+            customer_phone_number,
+            pickupAddress,
+            dropOffAddress,
+            customer_email,
+            number_of_passengers,
+          );
+        }
+        console.log("Reminder email sent successfully!");
+      } catch (error) {
+        console.log("Error sending reminder email!", error);
       }
-      catch (error) {
-        console.log("Error Sending message!!");
-      }
-    })
+    });
 
     res.status(201).json({
       message: "Ride scheduled successfully!",
@@ -1643,6 +1719,164 @@ function getCronTime(date: Date) {
 
   return `${min} ${hour} ${day} ${month} *`;
 }
+
+export const gettheScheduleBooking = async (req: Request, res: Response) => {
+  try {
+    // Assuming you have a ScheduleBooking model
+    // and you want to fetch all scheduled bookings
+    // You may want to add filters, pagination, etc. as needed
+
+    // Example: Fetch all scheduled bookings, populate driver and vehicle info
+    const scheduledBookings = await ScheduleRideModel.find().lean();
+
+    if(!scheduledBookings){
+      res.status(404).json({message:"Schedule Booking not found!!"});
+      return;
+    }
+
+
+    console.table(scheduledBookings);
+    console.log(scheduledBookings.length);
+
+
+    scheduledBookings.sort((a: any, b: any) => {
+      // Combine pickupDate and pickuptime for full datetime comparison
+      const getDateTime = (booking: any) => {
+        // If pickuptime is present, combine with pickupDate
+        if (booking.pickupDate && booking.pickuptime) {
+          // Try to parse as ISO if possible, else fallback
+          const dateStr = `${booking.pickupDate} ${booking.pickuptime}`;
+          const dateTime = new Date(dateStr);
+          if (!isNaN(dateTime.getTime())) return dateTime;
+        }
+        // Fallback: just use pickupDate
+        return new Date(booking.pickupDate);
+      };
+
+      const dateA = getDateTime(a);
+      const dateB = getDateTime(b);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    
+    res.status(200).json({
+      message: "Scheduled bookings fetched successfully!",
+      data: scheduledBookings,
+    });
+  } catch (error) {
+    console.error("Error fetching scheduled bookings:", error);
+    res.status(500).json({
+      message: "Something went wrong while fetching scheduled bookings.",
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+};
+
+export const updateScheduleData = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // Expecting the schedule ride ID in the URL params
+    const updateFields = req.body; // The fields to update
+
+    console.log("updateFields ===> ", updateFields)
+
+    if (!id) {
+       res.status(400).json({ message: "Schedule ride ID is required." });
+       return;
+    }
+
+    // Find the scheduled ride by ID and update it
+    // Ensure that if 'date' or 'time' are present in updateFields, we map them to 'pickupDate' and 'pickuptime' in the model
+    if (updateFields.date) {
+      updateFields.pickupDate = updateFields.date;
+      delete updateFields.date;
+    }
+    if (updateFields.time) {
+      updateFields.pickuptime = updateFields.time;
+      delete updateFields.time;
+    }
+    const updatedSchedule = await ScheduleRideModel.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSchedule) {
+       res.status(404).json({ message: "Scheduled ride not found." });
+       return;
+    }
+
+    console.log("updateded Schedule ===> ", updatedSchedule);
+
+    
+    const dateTimeString = `${updateFields.pickupDate} ${updateFields.pickuptime}`;
+
+    console.log("date time string ===> ",dateTimeString );
+
+    const rideDateTime = parse(dateTimeString, "MM/dd/yyyy hh:mma", new Date());
+
+    if(isNaN(rideDateTime.getTime())){
+      console.log("invaild Ride and Date/Time format..");
+      res.status(400).json({message:"Invaild date or time format."});
+      return;
+    }
+
+    const timeZone = "Asia/Kolkata";
+    const rideDateTimeInTZ = toZonedTime(rideDateTime, timeZone);
+
+    const notifyTimeInTZ = new Date(rideDateTimeInTZ.getTime() - 10 * 60 * 1000);
+
+    const cronTime = getCronTime(notifyTimeInTZ);
+
+    console.log("cronTime =============> ", cronTime)
+
+    await sendEmailUpdateMessageOfScheduleRide(updatedSchedule.pickuptime, updatedSchedule.pickupDate, updatedSchedule.customerName, updatedSchedule.customer_phone_number, updatedSchedule.pickupAddress, updatedSchedule.dropOffAddress, updatedSchedule.customer_email, updatedSchedule.number_of_passengers, updatedSchedule.returnTime, updatedSchedule.returnDate);
+  
+
+    cron.schedule(cronTime, async() =>{
+      try {
+        if(updatedSchedule.roundTrip){
+          await sendEmailMessageBeforeTimeWithExtraParams(
+            updatedSchedule.pickupDate,
+            updatedSchedule.pickuptime,
+            updatedSchedule.customerName,
+            updatedSchedule.customer_phone_number,
+            updatedSchedule.pickupAddress,
+            updatedSchedule.dropOffAddress,
+            updatedSchedule.returnDate,
+            updatedSchedule.returnTime,
+            updatedSchedule.customer_email,
+            updatedSchedule.number_of_passengers,
+          );
+        }
+        else{
+          await sendEmailMessageBeforeTime(
+            updatedSchedule.pickupDate,
+            updatedSchedule.pickuptime,
+            updatedSchedule.customerName,
+            updatedSchedule.customer_phone_number,
+            updatedSchedule.pickupAddress,
+            updatedSchedule.dropOffAddress,
+            updatedSchedule.customer_email,
+            updatedSchedule.number_of_passengers,
+          );
+        }
+      } catch (error) {
+        console.log("ERROR SENDING REMINDER EMAIL!", error)
+      }
+    })
+
+    res.status(200).json({
+      message: "Scheduled ride updated successfully.",
+      data: updatedSchedule,
+    });
+  } catch (error) {
+    console.error("Error updating scheduled ride:", error);
+    res.status(500).json({
+      message: "Something went wrong while updating the scheduled ride.",
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+};
 
 
 export const getDriverWithAssignedVehicle = async (req: Request, res: Response) => {

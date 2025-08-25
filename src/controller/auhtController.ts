@@ -1,8 +1,11 @@
+import dotenv from "dotenv"
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/User";
 import { loginSchema, registerSchema } from "../schema/userSchema";
+
+dotenv.config();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
 
@@ -12,7 +15,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({errors: validationResult.error.errors});
     return;
   }
-  const { name, email, password, role } = validationResult.data;
+  const { name, email,phone_number, password, role } = validationResult.data;
 
   try {
     const exsitingUser = await User.findOne({ email });
@@ -21,7 +24,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword, role });
+    const user = new User({ name, email, phone_number,password: hashedPassword, role });
     await user.save();
 
 
@@ -167,8 +170,12 @@ export const loginadmin = async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if user is admin or superadmin
-    if (user.role !== "admin" && user.role !== "super-admin") {
+    // Check if user is admin, super-admin, or fleet-manager
+    if (
+      user.role !== "admin" &&
+      user.role !== "super-admin" &&
+      user.role !== "fleet-manager"
+    ) {
       res.status(403).json({ message: "Access denied. Admin privileges required." });
       return;
     }

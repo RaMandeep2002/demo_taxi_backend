@@ -59,6 +59,13 @@ export const registerSharedVehicleSchema = z.object({
     vehicleModel: z.string().min(3, "Car vehicleModel atleast more than 6 charaters"),
     year:z.number(),
     vehicle_plate_number:z.string(),
+    vin_number : z.string().optional(),
+    color : z.string().optional(),
+    fuel_type : z.string().optional(),
+    transmission : z.string().optional(),
+    registration_State : z.string().optional(),
+    registration_Expiry_Date : z.string().optional(),
+    last_Inspection_Date : z.string().optional()
 })
 
 export const updateVehicleSchema = z.object({

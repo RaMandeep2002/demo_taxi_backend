@@ -34,14 +34,6 @@ const DriverSchema: Schema = new Schema(
       required:true,
       unique:true
     },
-    firstname: {
-      type: String,
-      required: true
-    },
-    lastname: {
-      type: String,
-      requried: true
-    },
     email: {
       type: String,
       required: true,

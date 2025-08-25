@@ -9,6 +9,8 @@ const router = express.Router();
 
 router.post(
   "/register",
+  authenticate,
+  authorize(["super-admin"]),
   register,
 );
 

@@ -69,7 +69,7 @@ export const getAllVehicles = async (req: Request, res: Response) => {
     }
 
     const vehicles = await Vehicle.find().select(
-      "_id company vehicleModel year vehicle_plate_number status registrationNumber isAssigned"
+      "_id company vehicleModel year vehicle_plate_number  vin_number color fuel_type transmission registration_State registration_Expiry_Date last_Inspection_Date status registrationNumber isAssigned"
     );
 
     if (!vehicles || vehicles.length === 0) {
@@ -151,6 +151,7 @@ export const startShift = async (req: Request, res: Response) => {
 
   try {
     const driver = await Driver.findOne({ driverId: driverIdIdentity });
+    console.log("driver ---> ", driver);
     if (!driver) {
       res.status(404).json({ message: "Driver not found" });
       return;

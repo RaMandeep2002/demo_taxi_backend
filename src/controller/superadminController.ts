@@ -58,7 +58,7 @@ export const getSuperAdminInfo = async (req: AuthRequest, res: Response) => {
 export const createAdmin = async (req: Request, res: Response) => {
   const validationResult = registerSchema.safeParse(req.body);
 
-  if (!validationResult.success) {
+  if (!validationResult.success) {  
     res.status(400).json({ errors: validationResult.error.errors });
     return;
   }
