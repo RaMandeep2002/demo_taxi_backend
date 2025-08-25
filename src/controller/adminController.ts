@@ -59,7 +59,7 @@ const generateRandomRegistrationNumber = () => {
 export const getAllAdminInfo = async (req: Request, res: Response) => {
   console.log("admin")
   try {
-    const admin = await User.find({ role: Roles.Admin });
+    const admin = await User.find({ role: { $in: [Roles.Admin, Roles.Super] } });
     console.table(admin)
     if (!admin) {
       res.status(404).json({ message: "No admin information found!!" });
