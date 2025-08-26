@@ -171,6 +171,8 @@ export const adddriver = async (req: Request, res: Response) => {
       location: { latitude: 0, longitude: 0 }, // Default location
     });
 
+    console.log("driver ===> ", driver)
+
     await driver.save();
 
     res.status(201).json({
