@@ -1600,6 +1600,7 @@ export const scheduleRide = async (req: Request, res: Response) => {
       pickupAddress,
       dropOffAddress,
       status: "schedule",
+      sendtoemail: false
     };
 
     console.log("scheduledRideData --------> ", scheduledRideData)
@@ -1621,7 +1622,11 @@ export const scheduleRide = async (req: Request, res: Response) => {
 
     // Parse the scheduled ride time for notification scheduling
     const dateTimeString = `${date} ${time}`;
+    console.log("dateTimeString ====> ", dateTimeString)
+
     const rideDateTime = parse(dateTimeString, "MM/dd/yyyy hh:mma", new Date());
+    console.log("rideDateTime ====> ", rideDateTime)
+
 
     if (isNaN(rideDateTime.getTime())) {
       console.error("Invalid ride date/time format.");
@@ -1700,6 +1705,9 @@ export const scheduleRide = async (req: Request, res: Response) => {
           );
         }
         console.log("Reminder email sent successfully!");
+
+        scheduledRide.sendtoemail = true;
+        await scheduledRide.save();
       } catch (error) {
         console.log("Error sending reminder email!", error);
       }

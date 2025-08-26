@@ -13,6 +13,7 @@ export interface IScheduleRide extends Document {
     roundTrip: boolean;
     returnDate?: string;
     returnTime?: string;
+    sendtoemail?:boolean;
 }
 
 
@@ -31,6 +32,7 @@ const ScheduleRideSchema: Schema = new Schema<IScheduleRide>({
     roundTrip: { type: Boolean, default: false },
     returnDate: { type: String },
     returnTime: { type: String },
+    sendtoemail: {type:Boolean, default: false}
 }, { timestamps: true });
 
 export default mongoose.model<IScheduleRide>("ScheduleRide", ScheduleRideSchema);
