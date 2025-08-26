@@ -1632,9 +1632,11 @@ export const scheduleRide = async (req: Request, res: Response) => {
     // Use Asia/Kolkata as the time zone for scheduling
     const timeZone = "Asia/Kolkata";
     const rideDateTimeInTZ = toZonedTime(rideDateTime, timeZone);
+    console.log("rideDateTimeInTZ ====> ", rideDateTimeInTZ)
 
     // Subtract 10 minutes for the notification
     const notifyTimeInTZ = new Date(rideDateTimeInTZ.getTime() - 10 * 60 * 1000);
+    console.log("notifyTimeInTZ ====> ", notifyTimeInTZ)
 
     // Schedule the notification email
     const cronTime = getCronTime(notifyTimeInTZ);
