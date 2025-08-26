@@ -150,8 +150,12 @@ export const adddriver = async (req: Request, res: Response) => {
       name: drivername,
       email,
       password: hashedpassword,
+      phone_number:phoneNumber,
       role: Roles.Driver,
     });
+
+
+    console.log("user (driver) ====> ", user)
 
     await user.save();
 
