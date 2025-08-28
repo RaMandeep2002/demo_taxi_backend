@@ -19,7 +19,7 @@ import { format } from "fast-csv";
 import { parse } from "date-fns";
 import cron from "node-cron";
 import { sendWhatsappMessage } from "../utils/whatsappMessageSender";
-import { sendBookingsDetailsReportEmail, sendEmailMessage, sendEmailMessageBeforeTime, sendEmailMessageBeforeTimeWithExtraParams, sendEmailMessagewithextraParams, sendEmailUpdateMessageOfScheduleRide } from "../utils/emailMessageSender";
+import { sendBookingConfirmationemailtoCustomer, sendBookingsDetailsReportEmail, sendEmailMessage, sendEmailMessageBeforeTime, sendEmailMessageBeforeTimeWithExtraParams, sendEmailMessagewithextraParams, sendEmailUpdateMessageOfScheduleRide } from "../utils/emailMessageSender";
 import path from "path";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { record } from "zod";
@@ -1650,6 +1650,22 @@ export const scheduleRide = async (req: Request, res: Response) => {
 
     // Send immediate confirmation email
     // If roundTrip, pass returnDate and returnTime as well
+
+    await sendBookingConfirmationemailtoCustomer({
+      toEmail: customer_email,
+      customerName,
+      date,
+      time,
+      pickupAddress,
+      dropOffAddress,
+      number_of_passengers,
+      returnDate,
+      returnTime,
+      roundTrip,
+      customerPhone: customer_phone_number,
+    }); 
+
+
     if (roundTrip) {
       await sendEmailMessagewithextraParams(
         date,
