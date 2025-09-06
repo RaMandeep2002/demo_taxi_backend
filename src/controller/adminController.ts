@@ -24,6 +24,7 @@ import path from "path";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { record } from "zod";
 import ScheduleRideModel from "../models/ScheduleRideModel";
+import { formatZodErrors } from "../utils/formatZodErrors";
 
 const adminWhatsAppNumber = process.env.ADMIN_WHATSAPP_NUMBER!;
 
@@ -59,7 +60,7 @@ const generateRandomRegistrationNumber = () => {
 export const getAllAdminInfo = async (req: Request, res: Response) => {
   console.log("admin")
   try {
-    const admin = await User.find({ role: { $in: [Roles.Admin, Roles.Super] } });
+    const admin = await User.find({ role: { $in: [Roles.Admin, Roles.Super, Roles.FleetManager, Roles.DriverManager] } });
     console.log(admin)
     if (!admin) {
       res.status(404).json({ message: "No admin information found!!" });
@@ -119,8 +120,20 @@ export const adddriver = async (req: Request, res: Response) => {
   console.log("Enter ===> ", req.body)
   const validationResult = DriverAddSchema.safeParse(req.body);
   console.log("validationResult ==> ", validationResult);
+  // if (!validationResult.success) {
+  //   res.status(400).json({ error: validationResult.error.format() });
+  //   return;
+  // }
+
   if (!validationResult.success) {
-    res.status(400).json({ errors: validationResult.error.format() });
+
+    // console.log("validationResult.error =====> ", validationResult.error)
+    const formattedErrors = formatZodErrors(validationResult.error);
+    console.log("Format Errors ====> ", formattedErrors);
+    res.status(400).json({
+      success: false,
+      errors: formattedErrors,
+    });
     return;
   }
 
@@ -150,7 +163,7 @@ export const adddriver = async (req: Request, res: Response) => {
       name: drivername,
       email,
       password: hashedpassword,
-      phone_number:phoneNumber,
+      phone_number: phoneNumber,
       role: Roles.Driver,
     });
 
@@ -183,8 +196,9 @@ export const adddriver = async (req: Request, res: Response) => {
       message: "Driver added Successfully",
       driver: { drivername, email, driversLicenseNumber, phoneNumber },
     });
-  } catch (error: any) {
-    res.status(400).json({ messge: "Something went worng!", error });
+  } catch (error:any) {
+    res.status(500).json({ message: "Something went wrong!", error: error.message });
+    return;
   }
 };
 
@@ -422,7 +436,8 @@ export const upadateDriver = async (req: Request, res: Response) => {
     res.status(400).json({ errors: validationResult.error.errors });
     return;
   }
-  const { drivername, email, phoneNumber, driversLicenseNumber, password } = validationResult.data;
+  const { drivername, email, phoneNumber, driversLicenseNumber, licenseState, licenseExpiryDate, licenseClass, password } = validationResult.data;
+
 
   try {
     const originalDriver = await Driver.findOne({ driverId });
@@ -439,6 +454,9 @@ export const upadateDriver = async (req: Request, res: Response) => {
       email,
       phoneNumber,
       driversLicenseNumber,
+      licenseState,
+      licenseExpiryDate,
+      licenseClass,
     };
 
     const updatedDriver = await Driver.findOneAndUpdate(
@@ -720,7 +738,12 @@ export const registerSharedVehicle = async (req: Request, res: Response) => {
   const validationResult = registerSharedVehicleSchema.safeParse(req.body);
   console.log("validation result ==> ", validationResult);
   if (!validationResult.success) {
-    res.status(400).json({ errors: validationResult.error.errors });
+    const formattedErrors = formatZodErrors(validationResult.error);
+    console.log("Format Errors ====> ", formattedErrors);
+    res.status(400).json({
+      success: false,
+      errors: formattedErrors,
+    });
     return;
   }
 
@@ -728,12 +751,13 @@ export const registerSharedVehicle = async (req: Request, res: Response) => {
     color,
     fuel_type,
     transmission,
+    registrationNumber,
     registration_State,
     registration_Expiry_Date,
     last_Inspection_Date } = validationResult.data;
 
   try {
-    const { registrationNumber } = generateRandomRegistrationNumber();
+    // const { registrationNumber } = generateRandomRegistrationNumber();
 
     const newVehicle = new Vehicle({
       registrationNumber,
@@ -1242,7 +1266,11 @@ export const generateAndSendReport = async () => {
     console.log(`📄 CSV file created: ${filepath}`);
 
     try {
-      await sendBookingsDetailsReportEmail("ramandeepsingh1511@gmail.com", filepath);
+      await sendBookingsDetailsReportEmail(
+        "salmonarmtaxis@gmail.com",
+        "ramandeepsingh1511@gmail.com,CPVData@gov.bc.ca,Salmonarmtaxi@hotmail.com,",
+        filepath
+      );
       console.log("📧 Report emailed successfully!");
       return { success: true, recordCount: bookings.length }
     } catch (error) {
@@ -1663,7 +1691,7 @@ export const scheduleRide = async (req: Request, res: Response) => {
       returnTime,
       roundTrip,
       customerPhone: customer_phone_number,
-    }); 
+    });
 
 
     if (roundTrip) {
@@ -1761,8 +1789,8 @@ export const gettheScheduleBooking = async (req: Request, res: Response) => {
     // Example: Fetch all scheduled bookings, populate driver and vehicle info
     const scheduledBookings = await ScheduleRideModel.find().lean();
 
-    if(!scheduledBookings){
-      res.status(404).json({message:"Schedule Booking not found!!"});
+    if (!scheduledBookings) {
+      res.status(404).json({ message: "Schedule Booking not found!!" });
       return;
     }
 
@@ -1790,7 +1818,7 @@ export const gettheScheduleBooking = async (req: Request, res: Response) => {
       return dateB.getTime() - dateA.getTime();
     });
 
-    
+
     res.status(200).json({
       message: "Scheduled bookings fetched successfully!",
       data: scheduledBookings,
@@ -1812,8 +1840,8 @@ export const updateScheduleData = async (req: Request, res: Response) => {
     console.log("updateFields ===> ", updateFields)
 
     if (!id) {
-       res.status(400).json({ message: "Schedule ride ID is required." });
-       return;
+      res.status(400).json({ message: "Schedule ride ID is required." });
+      return;
     }
 
     // Find the scheduled ride by ID and update it
@@ -1833,22 +1861,22 @@ export const updateScheduleData = async (req: Request, res: Response) => {
     );
 
     if (!updatedSchedule) {
-       res.status(404).json({ message: "Scheduled ride not found." });
-       return;
+      res.status(404).json({ message: "Scheduled ride not found." });
+      return;
     }
 
     console.log("updateded Schedule ===> ", updatedSchedule);
 
-    
+
     const dateTimeString = `${updateFields.pickupDate} ${updateFields.pickuptime}`;
 
-    console.log("date time string ===> ",dateTimeString );
+    console.log("date time string ===> ", dateTimeString);
 
     const rideDateTime = parse(dateTimeString, "MM/dd/yyyy hh:mma", new Date());
 
-    if(isNaN(rideDateTime.getTime())){
+    if (isNaN(rideDateTime.getTime())) {
       console.log("invaild Ride and Date/Time format..");
-      res.status(400).json({message:"Invaild date or time format."});
+      res.status(400).json({ message: "Invaild date or time format." });
       return;
     }
 
@@ -1862,11 +1890,11 @@ export const updateScheduleData = async (req: Request, res: Response) => {
     console.log("cronTime =============> ", cronTime)
 
     await sendEmailUpdateMessageOfScheduleRide(updatedSchedule.pickuptime, updatedSchedule.pickupDate, updatedSchedule.customerName, updatedSchedule.customer_phone_number, updatedSchedule.pickupAddress, updatedSchedule.dropOffAddress, updatedSchedule.customer_email, updatedSchedule.number_of_passengers, updatedSchedule.returnTime, updatedSchedule.returnDate);
-  
 
-    cron.schedule(cronTime, async() =>{
+
+    cron.schedule(cronTime, async () => {
       try {
-        if(updatedSchedule.roundTrip){
+        if (updatedSchedule.roundTrip) {
           await sendEmailMessageBeforeTimeWithExtraParams(
             updatedSchedule.pickupDate,
             updatedSchedule.pickuptime,
@@ -1880,7 +1908,7 @@ export const updateScheduleData = async (req: Request, res: Response) => {
             updatedSchedule.number_of_passengers,
           );
         }
-        else{
+        else {
           await sendEmailMessageBeforeTime(
             updatedSchedule.pickupDate,
             updatedSchedule.pickuptime,

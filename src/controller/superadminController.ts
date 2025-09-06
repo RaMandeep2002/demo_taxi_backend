@@ -4,6 +4,9 @@ import User from "../models/User";
 import { AuthRequest } from "../types/custom";
 import { Roles } from "../types/roles";
 import { registerSchema } from "../schema/userSchema";
+import NotificationEmail, { emailNortificationSchema } from "../models/NotificationEmail";
+import { formatZodErrors } from "../utils/formatZodErrors";
+
 
 // Get all admins (including superadmin)
 export const getAllAdmins = async (req: Request, res: Response) => {
@@ -289,6 +292,52 @@ export const getSystemStats = async (req: Request, res: Response) => {
     res.status(500).json({ 
       message: "Error fetching system statistics", 
       error 
+    });
+  }
+};
+
+
+
+export const settheEmailNotification = async (req: Request, res: Response) => {
+  try {
+    // Accepts { email, appPassword } in body
+    const validationResult = emailNortificationSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      const formattedErrors = formatZodErrors(validationResult.error);
+      console.log("Format Errors ====> ", formattedErrors);
+      res.status(400).json({
+        success: false,
+        errors: formattedErrors,
+      });
+      return;
+    }
+
+    const { email, appPassword } = validationResult.data;
+
+    if (!email || !appPassword) {
+      res.status(400).json({ message: "Email and appPassword are required" });
+      return;
+    }
+
+    const nortificationsetting = new NotificationEmail({
+      email,
+      appPassword
+    });
+
+    await nortificationsetting.save();
+
+    res.status(200).json({
+      message:"Your Nortification Email set Successfully!!",
+      data:{
+        email:nortificationsetting.email,
+      }
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating email notification setting",
+      error
     });
   }
 };

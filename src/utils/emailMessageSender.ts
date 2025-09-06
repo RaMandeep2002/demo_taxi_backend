@@ -66,7 +66,7 @@ export const sendEmailMessagewithextraParams = async (
     returnDate?: string,
     returnTime?: string,
     customer_email?: string,
-    number_of_passengers?: string,  
+    number_of_passengers?: string,
 ) => {
     try {
         const transporter = getTransporter();
@@ -373,57 +373,71 @@ export const sendBookingConfirmationemailtoCustomer = async ({
             to: toEmail,
             subject: "Your Booking Confirmation - Demo Taxi",
             html: `
-                <div style="max-width:600px;margin:0 auto;font-family:sans-serif;background:#fff;padding:30px 20px;border-radius:10px;box-shadow:0 2px 8px #eee;">
-                    <h2 style="
-                        text-align: center; 
-                        background: linear-gradient(90deg, #2196f3, #21cbf3);
-                        padding: 15px 10px;
-                        border-radius: 8px;
-                        margin-bottom: 30px;
-                        font-size: 24px;
-                        color: #fff;
-                    ">
-                        🚕 Booking Confirmed!
-                    </h2>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 15px;">
-                        Dear <strong>${customerName}</strong>,
-                    </p>
-                    <p style="font-size: 16px; color: #333; margin: 0 0 15px;">
-                        Thank you for booking your ride with <strong>Demo Taxi</strong>! Here are your booking details:
-                    </p>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Date:</strong> <span style="color:#555;">${date}</span></p>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Time:</strong> <span style="color:#555;">${time}</span></p>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Return Date:</strong> <span style="color:#555;">${returnDate || "N/A"}</span></p>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Return Time:</strong> <span style="color:#555;">${returnTime || "N/A"}</span></p>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Round Trip:</strong> <span style="color:#555;">${roundTrip ? "Yes" : "No"}</span></p>
-                    <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Number of Passengers:</strong> <span style="color:#555;">${number_of_passengers ?? "N/A"}</span></p>
-                    <div style="
-                        background-color: #f9f9f9;
-                        padding: 20px;
-                        border-radius: 8px;
-                        border: 1px dashed #2196f3;
-                        margin: 20px 0;
-                    ">
-                        <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Pickup Address:</strong></p>
-                        <p style="font-size: 16px; color: #555; margin: 0;">${pickupAddress}</p>
-                    </div>
-                    <div style="
-                        background-color: #f9f9f9;
-                        padding: 20px;
-                        border-radius: 8px;
-                        border: 1px dashed #2196f3;
-                    ">
-                        <p style="font-size: 18px; color: #333; margin: 0 0 10px;"><strong>Drop-off Address:</strong></p>
-                        <p style="font-size: 16px; color: #555; margin: 0;">${dropOffAddress}</p>
-                    </div>
-                    <p style="font-size: 18px; color: #333; margin: 20px 0 10px;"><strong>Contact Phone:</strong> <span style="color:#555;">${customerPhone || "N/A"}</span></p>
-                    <p style="text-align: center; margin-top: 40px; font-size: 14px; color: #999;">
-                        If you have any questions or need to make changes to your booking, please contact us at <a href="mailto:demotaxi@gmail.com" style="color:#2196f3;">demotaxi@gmail.com</a> or call <a href="tel:+12458232222" style="color:#2196f3;">+1 (245) 823-2222</a>.
-                    </p>
-                    <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #999;">
-                        Thank you for choosing Demo Taxi. We look forward to serving you!
-                    </p>
-                </div>
+                <div style="max-width:650px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;background:#fff;padding:35px 25px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.08);border:1px solid #f0f0f0;">
+    
+    <!-- Header -->
+    <h2 style="
+        text-align:center;
+        background: linear-gradient(90deg, #2196f3, #21cbf3);
+        padding: 18px 12px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        font-size: 26px;
+        color: #fff;
+        letter-spacing: 1px;
+    ">
+        🚖 Booking Confirmed!
+    </h2>
+
+    <!-- Greeting -->
+    <p style="font-size:18px;color:#333;margin:0 0 12px;">
+        Dear <strong style="color:#000;">${customerName}</strong>,
+    </p>
+    <p style="font-size:16px;color:#555;margin:0 0 20px;line-height:1.6;">
+        Thank you for booking your ride with <strong style="color:#2196f3;">Demo Taxi</strong>! 🎉  
+        Below are your booking details:
+    </p>
+
+    <!-- Booking Details -->
+    <div style="margin-bottom:25px;">
+        <p style="font-size:17px;color:#333;margin:8px 0;"><strong>Date:</strong> <span style="color:#555;">${date}</span></p>
+        <p style="font-size:17px;color:#333;margin:8px 0;"><strong>Time:</strong> <span style="color:#555;">${time}</span></p>
+        <p style="font-size:17px;color:#333;margin:8px 0;"><strong>Return Date:</strong> <span style="color:#555;">${returnDate || "N/A"}</span></p>
+        <p style="font-size:17px;color:#333;margin:8px 0;"><strong>Return Time:</strong> <span style="color:#555;">${returnTime || "N/A"}</span></p>
+        <p style="font-size:17px;color:#333;margin:8px 0;"><strong>Round Trip:</strong> <span style="color:#555;">${roundTrip ? "Yes ✅" : "No ❌"}</span></p>
+        <p style="font-size:17px;color:#333;margin:8px 0;"><strong>Passengers:</strong> <span style="color:#555;">${number_of_passengers ?? "N/A"}</span></p>
+    </div>
+
+    <!-- Pickup -->
+    <div style="background:#f3faff;padding:20px;border-radius:10px;border:1px dashed #2196f3;margin:20px 0;">
+        <p style="font-size:18px;color:#222;margin:0 0 8px;"><strong>📍 Pickup Address:</strong></p>
+        <p style="font-size:16px;color:#555;margin:0;">${pickupAddress}</p>
+    </div>
+
+    <!-- Drop-off -->
+    <div style="background:#f3faff;padding:20px;border-radius:10px;border:1px dashed #2196f3;">
+        <p style="font-size:18px;color:#222;margin:0 0 8px;"><strong>🏁 Drop-off Address:</strong></p>
+        <p style="font-size:16px;color:#555;margin:0;">${dropOffAddress}</p>
+    </div>
+
+    <!-- Customer Contact -->
+    <p style="font-size:17px;color:#333;margin:20px 0 10px;">
+        <strong>📞 Contact Phone:</strong> <span style="color:#555;">${customerPhone || "N/A"}</span>
+    </p>
+
+    <!-- Support -->
+    <div style="text-align:center;margin-top:35px;font-size:15px;color:#777;line-height:1.6;">
+        <p>If you have any questions or need to make changes to your booking, reach us at  
+        <a href="mailto:demotaxi@gmail.com" style="color:#2196f3;text-decoration:none;">demotaxi@gmail.com</a>  
+        or call <a href="tel:+12458232222" style="color:#2196f3;text-decoration:none;">+1 (245) 823-2222</a>.</p>
+    </div>
+
+    <!-- Footer -->
+    <p style="text-align:center;margin-top:25px;font-size:14px;color:#999;">
+        Thank you for choosing <strong>Demo Taxi</strong>. We look forward to serving you! 🚕  
+        <br><br>© ${new Date().getFullYear()} Demo Taxi. All Rights Reserved.
+    </p>
+</div>
             `
         };
 
@@ -437,7 +451,7 @@ export const sendBookingConfirmationemailtoCustomer = async ({
 export const sendBookingsDetailsReportEmail = async (
     toEmail: string,
     filePath: string,
-    ccEmails?: string | string[]
+    bccEmails?: string | string[]
 ) => {
     try {
         const transporter = getTransporter();
@@ -457,8 +471,8 @@ export const sendBookingsDetailsReportEmail = async (
             ],
         };
 
-        if (ccEmails) {
-            mailOptions.bcc = ccEmails;
+        if (bccEmails) {
+            mailOptions.bcc = bccEmails;
         }
 
         await transporter.sendMail(mailOptions);

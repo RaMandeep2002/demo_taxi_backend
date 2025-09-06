@@ -3,6 +3,8 @@ import express, { NextFunction, Request, Response } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 dotenv.config();
+import path from "path";
+import fs from "fs-extra"
 
 
 import "./cron/scheduler";
@@ -18,6 +20,7 @@ import authRouter from "./routers/authRouter";
 import adminRouter from "./routers/adminRouter";
 import driverRoute from "./routers/driverRoute";
 import superadminRouter from "./routers/superadminRouter";
+import helmet from "helmet";
 
 const PORT = process.env.PORT;
 
@@ -31,13 +34,19 @@ const io = new Server(server, {
 connectDb();
 
 app.use(cors());
+app.use(helmet());
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(morgan("common"));
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.log(err.stack);
   res.status(500).json({ err: "something went working!" });
 });
+
+// app.use(morgan('combined', {
+//   stream: fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+// })) 
+
 
 app.get("/", (req: Request, res: Response) => {
   try {
@@ -56,7 +65,7 @@ app.use("/customer", bookigRouter);
 app.use("/api/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use("/api/driver", driverRoute);
-app.use("/superadmin", superadminRouter);
+app.use("/api/superadmin", superadminRouter);
 
 
 

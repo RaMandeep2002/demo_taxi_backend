@@ -9,6 +9,7 @@ import {
   deleteAdmin,
   toggleAdminStatus,
   getSystemStats,
+  settheEmailNotification,
 } from "../controller/superadminController";
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router.post("/admins", createAdmin);
 router.put("/admins/:id", updateAdmin);
 router.delete("/admins/:id", deleteAdmin);
 router.put("/admins/:id/status", toggleAdminStatus);
+router.post("/set_nortification_email", settheEmailNotification)
 
 // System statistics
 router.get("/stats", getSystemStats);

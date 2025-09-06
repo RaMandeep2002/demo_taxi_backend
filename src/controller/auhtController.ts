@@ -9,7 +9,11 @@ dotenv.config();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
 
+  console.log(req.body);
+
   const validationResult = registerSchema.safeParse(req.body);
+
+  console.log("validationResult ===> ", validationResult)
 
   if(!validationResult.success){
     res.status(400).json({errors: validationResult.error.errors});
@@ -32,7 +36,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 
     res.status(201).json({
-      message: "Admin registered successfully",
+      message: `${role} registered successfully`,
       user: userWithoutPassword,
     });
   } catch (error) {
