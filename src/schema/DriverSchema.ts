@@ -122,8 +122,56 @@ export const registerSharedVehicleSchema = z.object({
 });
 
 export const updateVehicleSchema = z.object({
-    company: z.string().min(3, "Car make atleast more than 6 charaters"),
-    vehicleModel: z.string().min(3, "Car vehicleModel atleast more than 6 charaters"),
-    year: z.number(),
-    vehicle_plate_number: z.string(),
-})
+    company: z.string({
+        required_error: "Car make is required",
+    })
+        .min(3, { message: "Car make must be at least 3 characters long" }),
+
+    vehicleModel: z.string({
+        required_error: "Vehicle model is required",
+    })
+        .min(3, { message: "Vehicle model must be at least 3 characters long" }),
+
+    year: z.number({
+        required_error: "Year is required",
+    })
+        .int({ message: "Year must be an integer" })
+        .min(1900, { message: "Year cannot be earlier than 1900" })
+        .max(new Date().getFullYear() + 1, { message: "Year cannot be too far in the future" }),
+
+    vehicle_plate_number: z.string({
+        required_error: "License plate number is required",
+    })
+        .min(3, { message: "License plate number must be at least 3 characters long" }),
+
+    vin_number: z.string({
+        required_error: "VIN number is required",
+    })
+        .min(11, { message: "VIN number must be at least 11 characters long" })
+        .max(17, { message: "VIN number cannot exceed 17 characters" })
+        .optional(),
+
+    color: z.string()
+        .min(3, { message: "Color must be at least 3 characters long" })
+        .optional(),
+
+    fuel_type: z.string()
+        .min(3, { message: "Fuel type is required!" })
+        .optional(),
+
+    transmission: z.string()
+        .min(3, { message: "Transmission type is required!" })
+        .optional(),
+
+    registration_State: z.string()
+        .min(2, { message: "Registration state is required!" })
+        .optional(),
+
+    registration_Expiry_Date: z.string()
+        .min(1, { message: "Registration expiry date is required!" })
+        .optional(),
+
+    last_Inspection_Date: z.string()
+        .min(1, { message: "Last inspection date is required!" })
+        .optional(),
+});

@@ -879,41 +879,83 @@ export const getDriverWithVehicleandshifts = async (req: Request, res: Response)
 
 export const updateVehicleInfomation = async (req: Request, res: Response) => {
   const { registrationNumber } = req.params;
+
+  // Validate request body using schema
   const validationResult = updateVehicleSchema.safeParse(req.body);
+
+  console.log("validation result ====> ", validationResult);
   if (!validationResult.success) {
-    res.status(400).json({ errors: validationResult.error.errors });
+
+    // console.log("validationResult.error =====> ", validationResult.error)
+    const formattedErrors = formatZodErrors(validationResult.error);
+    console.log("Format Errors ====> ", formattedErrors);
+    res.status(400).json({
+      success: false,
+      errors: formattedErrors,
+    });
     return;
   }
 
+  // Destructure all possible fields from the validated data
+  const {
+    company,
+    vehicleModel,
+    year,
+    vehicle_plate_number,
+    vin_number,
+    color,
+    fuel_type,
+    transmission,
+    registration_State,
+    registration_Expiry_Date,
+    last_Inspection_Date,
+  } = validationResult.data;
 
-  const { company, vehicleModel, year, vehicle_plate_number } = validationResult.data;
   try {
+    // Find the vehicle by registration number
     const vehicle = await Vehicle.findOne({ registrationNumber });
     if (!vehicle) {
-      res.status(404).json({ message: "Vehicle not found" });
-      return;
+       res.status(404).json({ message: "Vehicle not found" });
+       return;
     }
 
-    // const driver = await Driver.findOne({ driverId });
-    // if (!driver) {
-    //   res.status(404).json({ message: "Driver doest exist!!" });
-    //   return;
-    // }
+    // Prepare update object with only provided fields
+    const updateFields: any = {};
+    if (company !== undefined) updateFields.company = company;
+    if (vehicleModel !== undefined) updateFields.vehicleModel = vehicleModel;
+    if (year !== undefined) updateFields.year = year;
+    if (vehicle_plate_number !== undefined) updateFields.vehicle_plate_number = vehicle_plate_number;
+    if (vin_number !== undefined) updateFields.vin_number = vin_number;
+    if (color !== undefined) updateFields.color = color;
+    if (fuel_type !== undefined) updateFields.fuel_type = fuel_type;
+    if (transmission !== undefined) updateFields.transmission = transmission;
+    if (registration_State !== undefined) updateFields.registration_State = registration_State;
+    if (registration_Expiry_Date !== undefined) updateFields.registration_Expiry_Date = registration_Expiry_Date;
+    if (last_Inspection_Date !== undefined) updateFields.last_Inspection_Date = last_Inspection_Date;
 
-    const updateDriver = await Vehicle.findOneAndUpdate(
+    // Update the vehicle information
+    const updatedVehicle = await Vehicle.findOneAndUpdate(
       { registrationNumber },
-      { $set: { company, vehicleModel, year, vehicle_plate_number } },
-      { new: true },
+      { $set: updateFields },
+      { new: true }
     );
 
+    // Invalidate vehicles list cache in Redis
     await redisClinet.del("vehicles:list");
 
-
-    res
-      .status(200)
-      .json({ message: "Successfully updateed!!", vechicle: updateDriver });
-  } catch (error) {
-    res.status(400).json({ message: "Error Updating Vehicle", error });
+    // Respond with updated vehicle info
+     res.status(200).json({
+      message: "Vehicle updated successfully!",
+      vehicle: updatedVehicle,
+    });
+    return;
+  } catch (error: any) {
+    console.error("Error updating vehicle:", error);
+     res.status(500).json({
+      message: "Error updating vehicle",
+      error: error.message || error,
+    });
+    return;
   }
 };
 export const removeVehicle = async (req: Request, res: Response) => {
